@@ -34,6 +34,13 @@ func TestGetContentFromFile(t *testing.T) {
 	}
 }
 
+func TestGetContentFromFile_MustFailed_When_FileNotFound(t *testing.T) {
+	_, err := GetContentFromFile("../not_found_file.csv")
+	if err == nil {
+		t.Error("should be error when file not found")
+	}
+}
+
 func TestParseCSV(t *testing.T) {
 	csvContent := `url
 https://blognone.com
