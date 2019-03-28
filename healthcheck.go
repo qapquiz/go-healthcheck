@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"github.com/qapquiz/go-healthcheck/filemanager"
+	"io"
 )
 
 type HealthCheckReport struct {
@@ -22,7 +24,7 @@ func printReport(report HealthCheckReport, totalTimeUsed float64) {
 }
 
 func healthCheck(url string, isSuccessChannel chan<- bool) {
-
+	//MakeGetRequest(url)
 }
 
 func checkWebsiteInCSVFile(csvFileName string, sendReport chan<- HealthCheckReport) {
@@ -32,16 +34,24 @@ func checkWebsiteInCSVFile(csvFileName string, sendReport chan<- HealthCheckRepo
 		countFailureWebsites: 0,
 	}
 
-	//csvContent, err := filemanager.GetContentFromFile(csvFileName)
-	//if err != nil {
-	//	fmt.Printf("reading '%s' error. please try again\n", err)
-	//}
+	csvContent, err := filemanager.GetContentFromFile(csvFileName)
+	if err != nil {
+		fmt.Printf("reading '%s' error. please try again\n", err)
+	}
 
-	var url string
+	csvReader := filemanager.ParseCSV(csvContent)
+	csvReader.Read() // skip header
+
 	isSuccessChannel := make(chan bool)
-	for i := 0; i < 10; i++ {
-		report.totalWebsites++
-		go healthCheck(url, isSuccessChannel)
+	for {
+		url, err := csvReader.Read()
+		if err == nil {
+			go healthCheck(url[0], isSuccessChannel)
+		}
+
+		if err == io.EOF {
+			break
+		}
 	}
 
 	for i := 0; i < report.totalWebsites; i++ {
