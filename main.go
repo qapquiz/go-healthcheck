@@ -4,8 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"regexp"
 	"time"
+
+	"github.com/qapquiz/go-healthcheck/filemanager"
 )
 
 func readArguments() ([]string, error) {
@@ -15,12 +16,6 @@ func readArguments() ([]string, error) {
 	}
 
 	return args, nil
-}
-
-func isCSVFile(fileName string) bool {
-	var validCSVFile = regexp.MustCompile(`[^\s]+\.csv`)
-
-	return validCSVFile.MatchString(fileName)
 }
 
 func main() {
@@ -33,7 +28,7 @@ func main() {
 
 	csvFileName := args[0]
 
-	if !isCSVFile(csvFileName) {
+	if !filemanager.IsCSVFile(csvFileName) {
 		fmt.Printf("'%s' is not a csv file. please try again\n", csvFileName)
 		return
 	}

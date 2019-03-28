@@ -1,6 +1,8 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type HealthCheckReport struct {
 	totalWebsites int
@@ -30,9 +32,13 @@ func checkWebsiteInCSVFile(csvFileName string, sendReport chan<- HealthCheckRepo
 		countFailureWebsites: 0,
 	}
 
+	//csvContent, err := filemanager.GetContentFromFile(csvFileName)
+	//if err != nil {
+	//	fmt.Printf("reading '%s' error. please try again\n", err)
+	//}
+
 	var url string
 	isSuccessChannel := make(chan bool)
-	// read csv file somehow
 	for i := 0; i < 10; i++ {
 		report.totalWebsites++
 		go healthCheck(url, isSuccessChannel)
