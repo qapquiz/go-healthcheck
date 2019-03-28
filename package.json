@@ -12,6 +12,7 @@
   },
   "husky": {
     "hooks": {
+      "pre-commit": "go test ./...",
       "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
     }
   },
