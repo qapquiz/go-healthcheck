@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"github.com/qapquiz/go-healthcheck/healthcheck"
 	"os"
 	"time"
 
@@ -33,17 +34,17 @@ func main() {
 		return
 	}
 
-	fmt.Println("Perform website checking...")
+	fmt.Println("\nPerform website checking...")
 
 	startTime := time.Now()
-	receiveReportChannel := make(chan HealthCheckReport)
-	checkWebsiteInCSVFile(csvFileName, receiveReportChannel)
-	healthCheckReport := <- receiveReportChannel
+	receiveReportChannel := make(chan healthcheck.Report)
+	go healthcheck.CheckWithCSVFile(csvFileName, receiveReportChannel)
+	healthCheckReport := <-receiveReportChannel
 	totalTimeUsed := time.Since(startTime).Seconds() * 1000
 
-	fmt.Println("Done!")
+	fmt.Printf("Done!\n\n")
 
-	printReport(healthCheckReport, totalTimeUsed)
+	healthcheck.PrintReport(healthCheckReport, totalTimeUsed)
 
 	//lineAccessToken := getLineAccessToken()
 	//sendReport(sendReportUrl, lineAccessToken)

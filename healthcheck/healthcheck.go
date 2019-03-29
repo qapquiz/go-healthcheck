@@ -1,34 +1,56 @@
-package main
+package healthcheck
 
 import (
 	"fmt"
 	"github.com/qapquiz/go-healthcheck/filemanager"
 	"io"
+	"net"
+	"net/http"
+	"time"
 )
 
-type HealthCheckReport struct {
+const (
+	Timeout = time.Second * 30
+)
+
+type Report struct {
 	totalWebsites int
 	countSuccessWebsites int
 	countFailureWebsites int
 }
 
-func (report HealthCheckReport) print() {
+func (report Report) print() {
 	fmt.Printf("Checked websites: %d\n", report.totalWebsites)
 	fmt.Printf("Successful websites: %d\n", report.countSuccessWebsites)
 	fmt.Printf("Failure websites: %d\n", report.countFailureWebsites)
 }
 
-func printReport(report HealthCheckReport, totalTimeUsed float64) {
+func PrintReport(report Report, totalTimeUsed float64) {
 	report.print()
-	fmt.Printf("Total times to finished checking website: %.2fms", totalTimeUsed)
+	fmt.Printf("Total times to finished checking website: %.4fms\n", totalTimeUsed)
 }
 
-func healthCheck(url string, isSuccessChannel chan<- bool) {
-	//MakeGetRequest(url)
+func createClientWithTimeOut(timeout time.Duration) *http.Client {
+	return &http.Client{
+		Timeout: timeout,
+	}
 }
 
-func checkWebsiteInCSVFile(csvFileName string, sendReport chan<- HealthCheckReport) {
-	report := HealthCheckReport{
+func check(client *http.Client, url string, isSuccessChannel chan<- bool) {
+	_, err := client.Get(url)
+	if err, ok := err.(net.Error); ok && err.Timeout() {
+		isSuccessChannel <- false
+	}
+
+	// @todo error other than err.Timeout() should be handle
+
+	if err == nil {
+		isSuccessChannel <- true
+	}
+}
+
+func CheckWithCSVFile(csvFileName string, sendReport chan<- Report) {
+	report := Report{
 		totalWebsites: 0,
 		countSuccessWebsites: 0,
 		countFailureWebsites: 0,
@@ -42,15 +64,18 @@ func checkWebsiteInCSVFile(csvFileName string, sendReport chan<- HealthCheckRepo
 	csvReader := filemanager.ParseCSV(csvContent)
 	csvReader.Read() // skip header
 
+	client := createClientWithTimeOut(Timeout)
 	isSuccessChannel := make(chan bool)
 	for {
 		url, err := csvReader.Read()
-		if err == nil {
-			go healthCheck(url[0], isSuccessChannel)
-		}
 
 		if err == io.EOF {
 			break
+		}
+
+		if err == nil {
+			report.totalWebsites++
+			go check(client, url[0], isSuccessChannel)
 		}
 	}
 
@@ -64,4 +89,5 @@ func checkWebsiteInCSVFile(csvFileName string, sendReport chan<- HealthCheckRepo
 	}
 
 	sendReport <- report
+
 }
