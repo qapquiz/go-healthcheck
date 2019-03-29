@@ -2,11 +2,12 @@ package healthcheck
 
 import (
 	"fmt"
-	"github.com/qapquiz/go-healthcheck/filemanager"
 	"io"
 	"net"
 	"net/http"
 	"time"
+
+	"github.com/qapquiz/go-healthcheck/filemanager"
 )
 
 const (

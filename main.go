@@ -3,10 +3,10 @@ package main
 import (
 	"errors"
 	"fmt"
-	"github.com/qapquiz/go-healthcheck/healthcheck"
 	"os"
 	"time"
 
+	"github.com/qapquiz/go-healthcheck/healthcheck"
 	"github.com/qapquiz/go-healthcheck/filemanager"
 )
 
