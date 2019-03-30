@@ -6,8 +6,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/qapquiz/go-healthcheck/healthcheck"
 	"github.com/qapquiz/go-healthcheck/filemanager"
+	"github.com/qapquiz/go-healthcheck/healthcheck"
 )
 
 func readArguments() ([]string, error) {

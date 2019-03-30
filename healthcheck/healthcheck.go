@@ -5,6 +5,7 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/qapquiz/go-healthcheck/filemanager"
@@ -41,9 +42,13 @@ func check(client *http.Client, url string, isSuccessChannel chan<- bool) {
 	_, err := client.Get(url)
 	if err, ok := err.(net.Error); ok && err.Timeout() {
 		isSuccessChannel <- false
+		return
 	}
 
-	// @todo error other than err.Timeout() should be handle
+	if err != nil {
+		isSuccessChannel <- false
+		return
+	}
 
 	if err == nil {
 		isSuccessChannel <- true
@@ -59,11 +64,17 @@ func CheckWithCSVFile(csvFileName string, sendReport chan<- Report) {
 
 	csvContent, err := filemanager.GetContentFromFile(csvFileName)
 	if err != nil {
-		fmt.Printf("reading '%s' error. please try again\n", err)
+		fmt.Printf("%s. please try again\n", err)
+		os.Exit(1)
 	}
 
 	csvReader := filemanager.ParseCSV(csvContent)
-	csvReader.Read() // skip header
+	_, err = csvReader.Read() // skip header
+	if err == io.EOF {
+		fmt.Printf("'%s' is empty. please try again\n", csvFileName)
+		os.Exit(1)
+	}
+
 
 	client := createClientWithTimeOut(Timeout)
 	isSuccessChannel := make(chan bool)
