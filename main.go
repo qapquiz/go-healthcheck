@@ -3,12 +3,15 @@ package main
 import (
 	"errors"
 	"fmt"
+	"github.com/qapquiz/go-healthcheck/line"
 	"os"
 	"time"
 
 	"github.com/qapquiz/go-healthcheck/filemanager"
 	"github.com/qapquiz/go-healthcheck/healthcheck"
 )
+
+const lineHiringUrl = "https://hiring-challenge.appspot.com/healthcheck/report"
 
 func readArguments() ([]string, error) {
 	args := os.Args[1:]
@@ -46,6 +49,6 @@ func main() {
 
 	healthcheck.PrintReport(healthCheckReport, totalTimeUsed)
 
-	//lineAccessToken := getLineAccessToken()
-	//sendReport(sendReportUrl, lineAccessToken)
+	lineAccessToken := line.GetAccessToken()
+	healthcheck.SendReportToHiringLine(lineHiringUrl, lineAccessToken)
 }

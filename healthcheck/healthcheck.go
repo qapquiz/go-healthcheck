@@ -2,6 +2,7 @@ package healthcheck
 
 import (
 	"fmt"
+	"golang.org/x/oauth2"
 	"io"
 	"net"
 	"net/http"
@@ -50,9 +51,7 @@ func check(client *http.Client, url string, isSuccessChannel chan<- bool) {
 		return
 	}
 
-	if err == nil {
-		isSuccessChannel <- true
-	}
+	isSuccessChannel <- true
 }
 
 func CheckWithCSVFile(csvFileName string, sendReport chan<- Report) {
@@ -101,5 +100,8 @@ func CheckWithCSVFile(csvFileName string, sendReport chan<- Report) {
 	}
 
 	sendReport <- report
+}
+
+func SendReportToHiringLine(url string, lineAccessToken *oauth2.Token) {
 
 }
