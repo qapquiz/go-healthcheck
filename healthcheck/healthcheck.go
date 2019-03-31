@@ -1,6 +1,8 @@
 package healthcheck
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"golang.org/x/oauth2"
 	"io"
@@ -28,9 +30,9 @@ func (report Report) print() {
 	fmt.Printf("Failure websites: %d\n", report.countFailureWebsites)
 }
 
-func PrintReport(report Report, totalTimeUsed float64) {
+func PrintReport(report Report, totalTimeUsed int64) {
 	report.print()
-	fmt.Printf("Total times to finished checking website: %.4fms\n", totalTimeUsed)
+	fmt.Printf("Total times to finished checking website: %d ms\n", totalTimeUsed)
 }
 
 func createClientWithTimeOut(timeout time.Duration) *http.Client {
@@ -102,6 +104,34 @@ func CheckWithCSVFile(csvFileName string, sendReport chan<- Report) {
 	sendReport <- report
 }
 
-func SendReportToHiringLine(url string, lineAccessToken *oauth2.Token) {
+func SendReportToHiringLine(url string, lineAccessToken *oauth2.Token, report Report, totalTimeUsed int64) {
+	client := createClientWithTimeOut(Timeout)
+	body := map[string]int64{
+		"total_websites": int64(report.totalWebsites),
+		"success": int64(report.countSuccessWebsites),
+		"failure": int64(report.countFailureWebsites),
+		"total_time": totalTimeUsed,
+	}
 
+	jsonValue, _ := json.Marshal(body)
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonValue))
+	if err != nil {
+
+	}
+	req.Header.Add("Authorization", "Bearer " + lineAccessToken.AccessToken)
+	req.Header.Add("Content-Type", "application/json")
+
+	fmt.Println("sending report...")
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Printf("cannot send report to %s. please try again\n", url)
+		os.Exit(1)
+	}
+
+	if resp.StatusCode != 200 {
+		fmt.Printf("get error status: %d from %s. please try again\n" ,resp.StatusCode, url)
+		os.Exit(1)
+	}
+
+	fmt.Println("send report successfully!")
 }

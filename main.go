@@ -43,12 +43,12 @@ func main() {
 	receiveReportChannel := make(chan healthcheck.Report)
 	go healthcheck.CheckWithCSVFile(csvFileName, receiveReportChannel)
 	healthCheckReport := <-receiveReportChannel
-	totalTimeUsed := time.Since(startTime).Seconds() * 1000
+	totalTimeUsed := time.Since(startTime).Nanoseconds() / 1000000
 
 	fmt.Printf("Done!\n\n")
 
 	healthcheck.PrintReport(healthCheckReport, totalTimeUsed)
 
 	lineAccessToken := line.GetAccessToken()
-	healthcheck.SendReportToHiringLine(lineHiringUrl, lineAccessToken)
+	healthcheck.SendReportToHiringLine(lineHiringUrl, lineAccessToken, healthCheckReport, totalTimeUsed)
 }
