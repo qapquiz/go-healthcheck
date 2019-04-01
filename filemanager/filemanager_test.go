@@ -3,42 +3,39 @@ package filemanager
 import (
 	"io"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestIsCSVFile(t *testing.T) {
-	tests := []struct {
+	tests := map[string]struct{
 		input string
 		expected bool
 	}{
-		{"test.csv", true},
-		{"test.cs", false},
-		{"test", false},
+		"test.csv must be valid": {input: "test.csv", expected: true},
+		"test.cs must be invalid": {input: "test.cs", expected: false},
+		"test must be invalid": {input: "test", expected: false},
 	}
 
-	for _ ,test := range tests {
-		actual := IsCSVFile(test.input)
-		if actual != test.expected {
-			t.Errorf("Got '%v' but Expected '%v'", actual, test.expected)
-		}
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			actual := IsCSVFile(test.input)
+			assert.Equal(t, test.expected, actual)
+		})
 	}
 }
 
 func TestGetContentFromFile(t *testing.T) {
-	content, err := GetContentFromFile("../test.csv")
-	if err != nil {
-		t.Error(err)
-	}
+	pathToFile := "../test.csv"
+	content, err := GetContentFromFile(pathToFile)
 
-	if len(content) == 0 {
-		t.Errorf("file is empty or can't read file")
-	}
+	assert.Nil(t, err)
+	assert.NotEqual(t, 0, len(content))
 }
 
 func TestGetContentFromFile_MustFailed_When_FileNotFound(t *testing.T) {
 	_, err := GetContentFromFile("../not_found_file.csv")
-	if err == nil {
-		t.Error("should be error when file not found")
-	}
+	assert.NotNil(t, err)
 }
 
 func TestParseCSV(t *testing.T) {
