@@ -3,8 +3,8 @@ package healthcheck
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
-	"golang.org/x/oauth2"
 	"io"
 	"net"
 	"net/http"
@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/qapquiz/go-healthcheck/filemanager"
+	"golang.org/x/oauth2"
 )
 
 const (
@@ -93,10 +94,10 @@ func CheckWithCSVFile(csvFileName string, sendReport chan<- Report) {
 	}
 
 	for i := 0; i < report.totalWebsites; i++ {
-		isSuccess := <-isSuccessChannel
-		if isSuccess {
+		switch <-isSuccessChannel {
+		case true:
 			report.countSuccessWebsites++
-		} else {
+		case false:
 			report.countFailureWebsites++
 		}
 	}
@@ -104,7 +105,7 @@ func CheckWithCSVFile(csvFileName string, sendReport chan<- Report) {
 	sendReport <- report
 }
 
-func SendReportToHiringLine(url string, lineAccessToken *oauth2.Token, report Report, totalTimeUsed int64) {
+func SendReportToHiringLine(url string, lineAccessToken *oauth2.Token, report Report, totalTimeUsed int64) error {
 	client := createClientWithTimeOut(Timeout)
 	body := map[string]int64{
 		"total_websites": int64(report.totalWebsites),
@@ -113,25 +114,29 @@ func SendReportToHiringLine(url string, lineAccessToken *oauth2.Token, report Re
 		"total_time": totalTimeUsed,
 	}
 
-	jsonValue, _ := json.Marshal(body)
+	jsonValue, err := json.Marshal(body)
+	if err != nil {
+		return err
+	}
+
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonValue))
 	if err != nil {
-
+		return err
 	}
+
 	req.Header.Add("Authorization", "Bearer " + lineAccessToken.AccessToken)
 	req.Header.Add("Content-Type", "application/json")
 
-	fmt.Println("sending report...")
+	fmt.Println("Sending report...")
 	resp, err := client.Do(req)
 	if err != nil {
-		fmt.Printf("cannot send report to %s. please try again\n", url)
-		os.Exit(1)
+		return err
 	}
 
-	if resp.StatusCode != 200 {
-		fmt.Printf("get error status: %d from %s. please try again\n" ,resp.StatusCode, url)
-		os.Exit(1)
+	if resp.StatusCode != http.StatusOK {
+		return errors.New("response status should be ok(200)")
 	}
 
-	fmt.Println("send report successfully!")
+	fmt.Println("Send report successfully!")
+	return nil
 }

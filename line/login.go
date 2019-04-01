@@ -3,11 +3,34 @@ package line
 import (
 	"context"
 	"fmt"
-	"golang.org/x/oauth2"
 	"log"
 	"net/http"
 	"os"
+
+	"github.com/pkg/browser"
+	"github.com/qapquiz/go-healthcheck/random"
+	"golang.org/x/oauth2"
 )
+
+type lineLoginHandler struct {
+	state string
+	sendCode chan<- string
+}
+
+func (lineLoginHandler *lineLoginHandler) authLineCallback(w http.ResponseWriter, r *http.Request) {
+	if len(r.URL.Query().Get("error"))  != 0 {
+		fmt.Printf("Cannot login to line with error: %s. Please try again\n", r.URL.Query().Get("error_description"))
+	}
+
+	responseState := r.URL.Query().Get("state")
+
+	if lineLoginHandler.state != responseState {
+		fmt.Printf("There is an error in Line login. please try again")
+		os.Exit(1)
+	}
+
+	lineLoginHandler.sendCode <- r.URL.Query().Get("code")
+}
 
 func createOAuth2Config() *oauth2.Config {
 	return &oauth2.Config{
@@ -23,20 +46,12 @@ func createOAuth2Config() *oauth2.Config {
 }
 
 func openServerForReceiveCallback(state string, sendCode chan<- string) {
-	http.HandleFunc("/auth/callback", func(w http.ResponseWriter, r *http.Request) {
-		if len(r.URL.Query().Get("error"))  != 0 {
-			fmt.Printf("cannot login to line with error: %s, please try again\n", r.URL.Query().Get("error_description"))
-		}
+	handler := lineLoginHandler{
+		state,
+		sendCode,
+	}
 
-		responseState := r.URL.Query().Get("state")
-
-		if state != responseState {
-			fmt.Printf("there is an error in line login. please try again")
-			os.Exit(1)
-		}
-
-		sendCode <- r.URL.Query().Get("code")
-	})
+	http.HandleFunc("/auth/callback", handler.authLineCallback)
 
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
@@ -45,18 +60,22 @@ func GetAccessToken() *oauth2.Token {
 	ctx := context.Background()
 
 	config := createOAuth2Config()
-	// @todo need random string for state
-	state := "state"
+
+	state := random.RandStringBytesRemainder(7)
 	url := config.AuthCodeURL(state)
-	fmt.Println(url)
 
 	sendCode := make(chan string)
 	go openServerForReceiveCallback(state, sendCode)
+	err := browser.OpenURL(url)
+	if err != nil {
+		fmt.Println("Cannot open the url. You have to open it manually")
+		fmt.Println("Login with Line URL: ", url)
+	}
 
 	code := <-sendCode
 	token, err := config.Exchange(ctx, code)
 	if err != nil {
-		fmt.Printf("there is an error in line login. please try again")
+		fmt.Printf("There is an error in line login. Please try again")
 		os.Exit(1)
 	}
 

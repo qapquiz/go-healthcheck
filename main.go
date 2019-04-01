@@ -3,12 +3,12 @@ package main
 import (
 	"errors"
 	"fmt"
-	"github.com/qapquiz/go-healthcheck/line"
 	"os"
 	"time"
 
 	"github.com/qapquiz/go-healthcheck/filemanager"
 	"github.com/qapquiz/go-healthcheck/healthcheck"
+	"github.com/qapquiz/go-healthcheck/line"
 )
 
 const lineHiringUrl = "https://hiring-challenge.appspot.com/healthcheck/report"
@@ -49,6 +49,11 @@ func main() {
 
 	healthcheck.PrintReport(healthCheckReport, totalTimeUsed)
 
+	fmt.Printf("\nLogin with Line to send report to hiring line. Please allow and login in your browser.\n")
 	lineAccessToken := line.GetAccessToken()
-	healthcheck.SendReportToHiringLine(lineHiringUrl, lineAccessToken, healthCheckReport, totalTimeUsed)
+	fmt.Println("Login successfully")
+	err = healthcheck.SendReportToHiringLine(lineHiringUrl, lineAccessToken, healthCheckReport, totalTimeUsed)
+	if err != nil {
+		fmt.Printf("Cannot send report to %s. please try again\n", lineHiringUrl)
+	}
 }
