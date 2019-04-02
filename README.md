@@ -21,3 +21,13 @@ Login successfully
 Sending report...
 Send report successfully!
 ```
+## CSV File Spec
+CSV file must have 1 URL header and HTTP or HTTPS before a domain name.
+
+Example:
+```
+url
+https://google.com
+https://blognone.com
+https://macthai.com
+```
