@@ -56,7 +56,7 @@ func openServerForReceiveCallback(state string, sendCode chan<- string) {
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
-func GetAccessToken() *oauth2.Token {
+func GetAccessToken() (*oauth2.Token, error) {
 	ctx := context.Background()
 
 	config := createOAuth2Config()
@@ -75,9 +75,8 @@ func GetAccessToken() *oauth2.Token {
 	code := <-sendCode
 	token, err := config.Exchange(ctx, code)
 	if err != nil {
-		fmt.Printf("There is an error in line login. Please try again")
-		os.Exit(1)
+		return nil, err
 	}
 
-	return token
+	return token, nil
 }

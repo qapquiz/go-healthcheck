@@ -50,7 +50,11 @@ func main() {
 	healthcheck.PrintReport(healthCheckReport, totalTimeUsed)
 
 	fmt.Printf("\nLogin with Line to send a report to hiring line. Please allow and login in your browser.\n")
-	lineAccessToken := line.GetAccessToken()
+	lineAccessToken, err := line.GetAccessToken()
+	if err != nil {
+		fmt.Printf("There is an error in line login. Please try again")
+		os.Exit(1)
+	}
 	fmt.Println("Login successfully")
 	err = healthcheck.SendReportToHiringLine(lineHiringUrl, lineAccessToken, healthCheckReport, totalTimeUsed)
 	if err != nil {
