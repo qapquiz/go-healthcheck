@@ -1,11 +1,12 @@
 package healthcheck
 
 import (
-	"github.com/stretchr/testify/assert"
-	"golang.org/x/oauth2"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"golang.org/x/oauth2"
+	"github.com/stretchr/testify/assert"
 )
 
 func MockHandlerSuccessHiringLine(w http.ResponseWriter, r *http.Request) {
