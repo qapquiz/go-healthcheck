@@ -47,6 +47,11 @@ func main() {
 
 	fmt.Printf("Done!\n\n")
 
+	if !healthCheckReport.IsCheckAnyWebsite() {
+		fmt.Println("There are no websites in the CSV file.")
+		os.Exit(0)
+	}
+
 	healthcheck.PrintReport(healthCheckReport, totalTimeUsed)
 
 	fmt.Printf("\nLogin with Line to send a report to hiring line. Please allow and login in your browser.\n")

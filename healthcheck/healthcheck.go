@@ -31,6 +31,10 @@ func (report Report) print() {
 	fmt.Printf("Failure websites: %d\n", report.countFailureWebsites)
 }
 
+func (report Report) IsCheckAnyWebsite() bool{
+	return report.totalWebsites != 0
+}
+
 func PrintReport(report Report, totalTimeUsed int64) {
 	report.print()
 	fmt.Printf("Total times to finished checking website: %d ms\n", totalTimeUsed)
