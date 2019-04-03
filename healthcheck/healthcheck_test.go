@@ -5,8 +5,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"golang.org/x/oauth2"
 	"github.com/stretchr/testify/assert"
+	"golang.org/x/oauth2"
 )
 
 func MockHandlerSuccessHiringLine(w http.ResponseWriter, r *http.Request) {
@@ -39,6 +39,20 @@ func TestSendReportToHiringLine(t *testing.T) {
 			assert.Equal(t, test.isErrorNil, err == nil)
 		})
 	}
+}
 
+func TestReport_IsCheckAnyWebsite(t *testing.T) {
+	tests := map[string]struct{
+		report Report
+		expected bool
+	} {
+		"MustReturnTrue": { Report{totalWebsites: 20}, true },
+		"MustReturnFalse": { Report{totalWebsites: 0}, false },
+	}
 
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			assert.Equal(t, test.expected, test.report.IsCheckAnyWebsite())
+		})
+	}
 }
